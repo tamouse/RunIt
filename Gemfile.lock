@@ -1,0 +1,31 @@
+PATH
+  remote: .
+  specs:
+    RunIt (0.1.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    diff-lcs (1.2.4)
+    json (1.7.7)
+    rake (10.0.3)
+    rdoc (4.0.1)
+      json (~> 1.4)
+    rspec (2.13.0)
+      rspec-core (~> 2.13.0)
+      rspec-expectations (~> 2.13.0)
+      rspec-mocks (~> 2.13.0)
+    rspec-core (2.13.1)
+    rspec-expectations (2.13.0)
+      diff-lcs (>= 1.1.3, < 2.0)
+    rspec-mocks (2.13.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  RunIt!
+  bundler (~> 1.3)
+  rake
+  rdoc
+  rspec

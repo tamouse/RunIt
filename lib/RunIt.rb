@@ -14,32 +14,54 @@ A simple class to wrap Open3 to execute a command and return the result, stdout 
 =end
 
 require 'open3'
+require 'ostruct'
 
 class RunIt
 
-  attr_accessor :cmd, :input, :output, :error
+  VERSION = "0.1.0"
+
+  attr_accessor :cmd, :input, :output, :error, :result
 
   def initialize(cmd, input=nil, output=nil, error=nil)
 
     self.cmd = cmd
-    self.input = input
-    self.output = output ||= []
-    self.error = error ||= []
+    self.output = output ||= ''
+    self.error = error ||= ''
 
+    # Input is a little more complicated
+
+    case input
+    when String ; self.input = input
+    when Array ; self.input = input.flatten.join("\n")
+    when NilClass ; self.input = nil
+    else self.input = input.to_s
+    end
+    
   end
 
   def run
 
-    Open3.popen3(self.cmd) do |stdin, stdout, stderr, wait|
-      File.open(self.input,'r') {|infile| stdin.puts infile.gets} unless self.input.nil?
-      until stdout.eof?
-        self.output <<  stdout.gets
+    begin
+
+      Open3.popen3(self.cmd) do |stdin, stdout, stderr, wait|
+        stdin.puts self.input unless self.input.nil?
+        stdin.close
+        until stdout.eof?
+          self.output <<  stdout.gets
+        end
+        until stderr.eof?
+          self.error <<  stderr.gets
+        end
+        self.result = wait.value
+        self.result.success?
       end
-      until stderr.eof?
-        self.error <<  stderr.gets
-      end
-      result = wait.value
-      [ result, output, error ]
+
+    rescue Exception => e
+
+      self.result = OpenStruct.new(:success? => false, :exitstatus => -1)
+      self.error << "#{cmd} raised an error: #{e.class}:#{e}"
+      false
+
     end
         
   end
