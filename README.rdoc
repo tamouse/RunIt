@@ -1,23 +1,42 @@
-= RunIt - DESCRIBE YOUR GEM
+= RunIt - A wrapper class around Open3#popen3
 
-Author::  YOUR NAME (YOUR EMAIL)
-Copyright:: Copyright (c) 2013 YOUR NAME
+Author::  Tamara Temple <tamouse@gmail.com>
+Copyright:: Copyright (c) 2013 Tamara Temple Web Development
 
 
 License:: mit, see LICENSE.txt
 
 
+== SYNOPSIS
 
-DESCRIBE YOUR GEM HERE
+    runner = RunIt.new(command, [input,] [output,] [error])
+    result = runner.run
+    puts runner.output if result
+    puts runner.error unless result
+
+== DESCRIPTION
+
+RunIt is a very simple class that wraps up the Open3#popen3 call. When you create the object, you specify the command to run as a string, optionally the input to the command (no input is given if nil), a type of receiver for the output of the command, but default this will be a string, and a type of receiver for the error output of the command, by default, also a string.
+
+The #run method will execute the command, returning a Boolean denoting success or failure. The process status, standard output and standard error will be available from the runner object itself.
 
 == Links
 
-* {Source on Github}[LINK TO GITHUB]
+* {Source on Github}[https://github.com/tamouse/RunIt]
 * RDoc[LINK TO RDOC.INFO]
 
 == Install
 
+    gem install RunIt
+
 == Examples
+
+   runner = RunIt.new("/bin/ls")
+   if runner.run
+     # process runner.output
+   else
+     STDERR.puts runner.error
+   end
 
 == Contributing
 
