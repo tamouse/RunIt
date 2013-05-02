@@ -11,6 +11,14 @@
 
 A simple class to wrap Open3 to execute a command and return the result, stdout and stderr
 
+== Synopsis
+
+    require 'RunIt'
+
+    runner = RunIt.new "/bin/ls"
+    runner.run
+    puts runner.output
+
 =end
 
 require 'open3'
@@ -18,53 +26,113 @@ require 'ostruct'
 
 class RunIt
 
+  # Version 
   VERSION = "0.1.0"
 
-  attr_accessor :cmd, :input, :output, :error, :result
+  # cmd:: set/get the command to execute
+  attr_accessor :cmd
 
-  def initialize(cmd, input=nil, output=nil, error=nil)
+  # input:: set/get the input for the command
+  attr_accessor :input
 
-    self.cmd = cmd
-    self.output = output ||= ''
-    self.error = error ||= ''
+  # output:: get the output from the command
+  attr_reader :output
 
-    # Input is a little more complicated
+  # error:: get the error messages from the command
+  attr_reader :error
 
-    case input
-    when String ; self.input = input
-    when Array ; self.input = input.flatten.join("\n")
-    when NilClass ; self.input = nil
-    else self.input = input.to_s
-    end
-    
+  # result:: the result of the command as a Process::Status object
+  attr_reader :result
+
+
+  # Class function to tell if mocking is turned on
+  def self.mock?
+    @@mock
   end
 
+  # Class method to turn on mocking
+  def self.mock!
+    @@mock = true
+  end
+
+  # Class method to turn off mocking
+  def self.unmock!
+    @@mock = false
+  end
+  
+  # Initialize the RunIt object
+  #
+  # cmd:: (required) [String] - the full command line to execute
+  # input:: (optional) [String] - input to the command, if any
+  def initialize(cmd, input=nil)
+    self.cmd = cmd
+    self.input = input
+    self.result = nil
+    @@mock = false
+  end
+
+  # Execute the specified command
+  #
+  # If mocking is on, only return the command as the output, and set success to true
   def run
 
-    begin
+    if @@mock
 
-      Open3.popen3(self.cmd) do |stdin, stdout, stderr, wait|
-        stdin.puts self.input unless self.input.nil?
-        stdin.close
-        until stdout.eof?
-          self.output <<  stdout.gets
+      self.result = OpenStruct.new(:success? => true, :exitstatus => 0)
+      self.output = "Command entered: #{self.cmd}"
+      self.error  = ''
+      return true
+
+    else
+
+      self.output = ''
+      self.error  = ''
+      self.result = nil
+
+      begin
+
+        Open3.popen3(self.cmd) do |stdin, stdout, stderr, wait|
+          stdin.puts self.input unless self.input.nil?
+          stdin.close
+          until stdout.eof?
+            self.output <<  stdout.gets
+          end
+          until stderr.eof?
+            self.error <<  stderr.gets
+          end
+          self.result = wait.value
         end
-        until stderr.eof?
-          self.error <<  stderr.gets
-        end
-        self.result = wait.value
-        self.result.success?
+
+      rescue Exception => e
+
+        self.result = OpenStruct.new(:success? => false, :exitstatus => -1)
+        self.error << "#{cmd} raised an error: #{e.class}:#{e}"
+
       end
 
-    rescue Exception => e
-
-      self.result = OpenStruct.new(:success? => false, :exitstatus => -1)
-      self.error << "#{cmd} raised an error: #{e.class}:#{e}"
-      false
+      self.result.success?
 
     end
-        
+
   end
 
+  # Whether the command completed successfully
+  def success?
+    self.result.success?
+  end
+
+  # The exit status of the command
+  def exitstatus
+    self.result.exitstatus
+  end
+
+  # Instance method to tell if mocking is turned on
+  def mock?
+    @@mock
+  end
+
+  private
+
+
 end
- 
+
