@@ -67,7 +67,7 @@ class RunIt
   def initialize(cmd, input=nil)
     self.cmd = cmd
     self.input = input
-    self.result = nil
+    @result = nil
     @@mock = false
   end
 
@@ -78,16 +78,16 @@ class RunIt
 
     if @@mock
 
-      self.result = OpenStruct.new(:success? => true, :exitstatus => 0)
-      self.output = "Command entered: #{self.cmd}"
-      self.error  = ''
+      @result = OpenStruct.new(:success? => true, :exitstatus => 0)
+      @output = "Command entered: #{self.cmd}"
+      @error  = ''
       return true
 
     else
 
-      self.output = ''
-      self.error  = ''
-      self.result = nil
+      @output = ''
+      @error  = ''
+      @result = nil
 
       begin
 
@@ -95,18 +95,18 @@ class RunIt
           stdin.puts self.input unless self.input.nil?
           stdin.close
           until stdout.eof?
-            self.output <<  stdout.gets
+            @output <<  stdout.gets
           end
           until stderr.eof?
-            self.error <<  stderr.gets
+            @error <<  stderr.gets
           end
-          self.result = wait.value
+          @result = wait.value
         end
 
       rescue Exception => e
 
-        self.result = OpenStruct.new(:success? => false, :exitstatus => -1)
-        self.error << "#{cmd} raised an error: #{e.class}:#{e}"
+        @result = OpenStruct.new(:success? => false, :exitstatus => -1)
+        @error << "#{cmd} raised an error: #{e.class}:#{e}"
 
       end
 
