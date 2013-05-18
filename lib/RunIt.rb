@@ -27,7 +27,7 @@ require 'ostruct'
 class RunIt
 
   # Version 
-  VERSION = "1.0.0"
+  VERSION = "1.0.1"
 
   # cmd:: set/get the command to execute
   attr_accessor :cmd
